@@ -113,7 +113,7 @@ class docCorpus(object):
 		clusters = sorted(self.clusterSets[index], key=lambda c: -len(c.docIDs))
 		for i,cluster in  enumerate(clusters):
 			print "Terms for cluster "+str(i)+", ("+str(len(cluster.docIDs))+" docs) mean centroid distance: "+str(cluster.meanDistance)
-			words =  [ self.freqTab[word][0] for word in sorted(cluster.wordSet) ]
+			words =  [ self.freqTab[word][3][0] for word in sorted(cluster.wordSet) ]
 			print ' '.join(words) # Will these be vaguely relevant, or one of the aphorisms of Gertrude Stein? http://www.bartleby.com/140/
 			print
 
