@@ -74,7 +74,7 @@ class docCorpus(object):
 		
 		print self.docs
 		
-		self.freqTab = [] # List of (wordString,wordFrequency) tuples, most frequent words first.
+		self.freqTab = [] # List of (wordString,wordFrequency,unstemmed) tuples, most frequent words first.
 
 		self.clusterSets = [] # Lists of clusters of increasing size.
 		self.meanDistances = [1.0] # Mean centroid distance to each tweet for all cluster in a set.
@@ -104,7 +104,7 @@ class docCorpus(object):
 			for col in range(cols):
 				index = col*rows + row
 				if index < count:
-					chunk = ' '.join([str(index),self.freqTab[index][0],'('+str(self.freqTab[index][1])+')'])
+					chunk = ' '.join([str(index),self.freqTab[index][3][0],'('+str(self.freqTab[index][1])+')'])
 					thisRow += chunk + (colWidth-len(chunk))*' ' 
 			print thisRow
 	
@@ -130,23 +130,26 @@ class WordCount(MapReduce):
 	# Recieves a tweet's ID and it's text. Returns a list of (word,tweedID) tuples.
 	def map_fn(self, key, val):
 		words = val.split()
-		return [ (word, (1,key) ) for word in words ]
+		return [ (stem(word), (1,key,word) ) for word in words ]
 	
 	# Receive all the IDs of tweets containing a given word. Return the word, its frequency and a list of unique tweet IDs. 
 	def reduce_fn(self, word, values):
 		count = 0
     		docs = []
+    		unstemmed = []
     		for val in values:
         		count += val[0]
         		if val[1] not in docs:
 				docs.append(val[1])
-		
-        	return [(word, count, docs)]
+				if val[2] not in unstemmed:
+					unstemmed.append(val[2])
+
+        	return [(word, count, docs, unstemmed)]
 	
 	# Build the corpus' frequency table and give each tweet the indices of its words.
 	def output_fn(self, output_list):
 		for i,word in enumerate(sorted(output_list,key = lambda wrd: -wrd[1])):
-			self.corpus.freqTab.append((word[0],word[1]))
+			self.corpus.freqTab.append((word[0],word[1],word[2],word[3]))
 			for doc in word[2]:
 				self.corpus.docs[doc].addWord(i)
 
